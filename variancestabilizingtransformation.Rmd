@@ -1,0 +1,50 @@
+---
+title: "Untitled"
+author: "Danial Rafi"
+date: "12/11/2020"
+output: html_document
+---
+```{r}
+level<-c(1,1,1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,4,4,4,4,4,4)
+Method<-factor(level)
+Method
+Observations<-c(4.34, 4.12, 5.23, 4.7, 5.75,4.12, 4.91,4.94,6.14,6.36,6.86,8.55,11.31,12.37,13.75,10.09,13.82,11.24,21.15,15.82,14.95,21.9,18.35,20.82)
+dat<-data.frame(Method,Observations) 
+block <- c(1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
+View(dat)
+bartlett.test(Observations~Method, data=dat)
+install.packages("RVAideMemoire")
+library(RVAideMemoire)
+cochran.qtest()
+cochran.qtest(Observations~Method|block, dat, alpha=0.05, p.method = "fdr")
+??cochran.qtest()
+``` 
+
+Since we couldn't run cochran;s test in the limited time frame of the exam, we choose to go ahead with bartlett;s test and we see p-value is less than our desired alpha=0.05, so we reject null hypothesis that variances are equal.
+p is smaller than alpha, so null hypothesis is rejected. Null was equal variance. so, at least one variance is different. So our anova test is not valid since variance not equal. so we equalize variances by doing stablization transformation---
+
+```{r}
+sigmayi<-tapply(dat$Observations, dat$Method, sd)
+sigmayi
+mui<-tapply(dat$Observations, dat$Method, mean)
+mui
+logsigmayi<-log(sigmayi)
+logsigmayi
+logmui<-log(mui)
+logmui
+plot(logsigmayi, logmui, type="l")
+lm(logsigmayi~logmui)
+```
+
+Beta coefficient is 0.4465, so we will take square root transformation as 0.4465 is close to 0.5. 
+
+```{r}
+Observations1<-sqrt(Observations)
+anova<-aov(Observations1~dat$Method)
+summary(anova)
+par(mfrow=c(2,2))
+plot(anova)
+bartlett.test(dep1~Method, data=dat)
+```
+p is bigger than alpha, so null hypothesis is not rejected. Null was equal variance. So now our anova model is good to go.
+
